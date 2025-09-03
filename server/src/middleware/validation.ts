@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
+import { ROLE_VALUES } from '../types';
 
 export const handleValidationErrors = (
   req: Request,
@@ -30,6 +31,10 @@ export const validateUserRegistration = [
     .trim()
     .isLength({ min: 1, max: 50 })
     .withMessage('User name is required and must be less than 15 characters'),
+  body('role')
+    .optional()
+    .isIn(ROLE_VALUES)
+    .withMessage('Role must be one of: ' + ROLE_VALUES.join(', ')),
   handleValidationErrors
 ];
 
@@ -44,6 +49,10 @@ export const validateUserLogin = [
     .withMessage("Password is required")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
+  body('role')
+    .optional()
+    .isIn(ROLE_VALUES)
+    .withMessage('Role must be one of: ' + ROLE_VALUES.join(', ')),
   handleValidationErrors,
 ];
 

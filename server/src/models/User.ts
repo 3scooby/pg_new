@@ -6,7 +6,7 @@ interface UserAttributes {
   email: string;
   password: string;
   username: string;
-  role: 'admin' | 'merchant' | 'user';
+  role: 'admin' | 'merchant' | 'user' | 'vendor';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +19,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public email!: string;
   public password!: string;
   public username!: string;
-  public role!: 'admin' | 'merchant' | 'user';
+  public role!: 'admin' | 'merchant' | 'user' | 'vendor';  
   public isActive!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -55,7 +55,7 @@ User.init(
       }
     },
     role: {
-      type: DataTypes.ENUM('admin', 'merchant', 'user'),
+      type: DataTypes.ENUM('admin', 'merchant', 'user' , 'vendor'),
       allowNull: false,
       defaultValue: 'user'
     },

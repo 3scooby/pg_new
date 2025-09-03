@@ -1,10 +1,13 @@
 import { Request } from 'express';
 
+export type Role = 'admin' | 'merchant' | 'user' | 'vendor';
+export const ROLE_VALUES: Role[] = ['admin', 'merchant', 'user', 'vendor'];
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: string;
+    role: Role;
   };
 }
 
@@ -31,7 +34,7 @@ export interface User {
   email: string;
   password: string;
   username: string;
-  role: 'admin' | 'merchant' | 'user';
+  role: Role;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

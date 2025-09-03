@@ -13,14 +13,15 @@ const router = Router();
 
 // Protected routes
 router.post('/', 
-  authenticateToken, 
+  authenticateToken,
+  requireRole(['merchant', 'vendor', 'admin']), 
   paymentLimiter, 
   validatePaymentRequest, 
   createPayment
 );
 
-router.get('/transactions', authenticateToken, getTransactions);
-router.get('/transactions/:transactionId', authenticateToken, getTransaction);
+router.get('/transactions', authenticateToken, requireRole(['admin']), getTransactions);
+router.get('/transactions/:transactionId', authenticateToken, requireRole(['admin', 'merchant', 'vendor', 'user']), getTransaction);
 
 // Webhook routes (no authentication required)
 router.post('/webhooks/:gateway', handleWebhook);

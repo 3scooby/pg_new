@@ -3,12 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import swaggerUi from 'swagger-ui-express';
 import { config } from './config';
 import { syncDatabase } from './models';
 import routes from './routes';
 import { generalLimiter } from './middleware/rateLimiter';
-import { swaggerSpec } from './config/swagger';
 
 const app = express();
 
@@ -36,12 +34,7 @@ if (config.nodeEnv === 'development') {
   app.use(morgan('combined'));
 }
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Payment Aggregator API Documentation'
-}));
+// API Docs disabled; use Postman collection in repo
 
 // Routes
 app.use('/api/v1', routes);
@@ -76,7 +69,7 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`📊 Environment: ${config.nodeEnv}`);
       console.log(`🔗 Health check: http://localhost:${config.port}/api/v1/health`);
-      console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
+      console.log(`📚 API docs: Use the Postman collection in the repository`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

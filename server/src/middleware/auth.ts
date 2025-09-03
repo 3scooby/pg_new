@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
-import { AuthenticatedRequest } from '../types';
+import { AuthenticatedRequest, Role } from '../types';
 import User from '../models/User';
 
 export const authenticateToken = async (
@@ -47,7 +47,7 @@ export const authenticateToken = async (
   }
 };
 
-export const requireRole = (roles: string[]) => {
+export const requireRole = (roles: Role[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({

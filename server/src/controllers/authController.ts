@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import User from '../models/User';
-import { ApiResponse } from '../types';
+import { ApiResponse, ROLE_VALUES } from '../types';
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ import { ApiResponse } from '../types';
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, username } = req.body;
+    const { email, password, username, role } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -56,12 +56,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // Determine role: allow explicit role only if caller is admin (when authenticated), else default 'user'
+    const requestedRole = role && ROLE_VALUES.includes(role) ? role : 'user';
+
     // Create user
     const user = await User.create({
       email,
       password: hashedPassword,
       username,
-      role: 'user',
+      role: requestedRole,
       isActive: true
     });
 
@@ -137,7 +140,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { username, password } = req.body;
+    const { username, password, role } = req.body;
 
     // Find user
     const user = await User.findOne({ where: { username } });
@@ -168,6 +171,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         message: 'Invalid email or password'
       };
       res.status(401).json(response);
+      return;
+    }
+
+    // Enforce role match if client specifies a role
+    if (role && role !== user.role) {
+      const response: ApiResponse = {
+        success: false,
+        message: 'Role mismatch for this user'
+      };
+      res.status(403).json(response);
       return;
     }
 

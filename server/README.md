@@ -92,15 +92,13 @@ npm start
 
 ## API Documentation
 
-The API documentation is available via Swagger UI at:
-- **Development**: `http://localhost:3000/api-docs`
-- **Production**: `https://your-domain.com/api-docs`
+Swagger UI has been removed. Use the Postman collection included in the repo:
 
-The Swagger documentation provides:
-- Interactive API testing
-- Request/response schemas
-- Authentication examples
-- Error response formats
+- Import `postman_collection.json` into Postman
+- Create an environment with:
+  - `baseUrl` e.g. `http://localhost:3000/api/v1`
+  - `authToken` for the Bearer token (optional)
+- Run requests in the Auth and Payments folders
 
 ## API Endpoints
 
