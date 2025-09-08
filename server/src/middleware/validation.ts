@@ -76,3 +76,30 @@ export const validatePaymentRequest = [
     .withMessage('Gateway must be one of: stripe, paypal, razorpay'),
   handleValidationErrors
 ];
+
+export const validateCreatePayout = [
+  body('amount')
+    .isFloat({ min: 0.01 })
+    .withMessage('Amount must be a positive number'),
+  body('currency')
+    .optional()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Currency must be a 3-letter code'),
+  body('description')
+    .optional()
+    .isString()
+    .isLength({ min: 0, max: 500 })
+    .withMessage('Description must be <= 500 characters'),
+  handleValidationErrors
+];
+
+export const validateSubmitPayoutUpi = [
+  body('payoutId')
+    .isUUID()
+    .withMessage('payoutId must be a valid UUID'),
+  body('upiId')
+    .isString()
+    .matches(/^[A-Za-z0-9._%+-]+@[A-Za-z]+$/)
+    .withMessage('Invalid UPI ID format'),
+  handleValidationErrors
+];

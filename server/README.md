@@ -116,6 +116,34 @@ Swagger UI has been removed. Use the Postman collection included in the repo:
 ### System
 - `GET /api/v1/health` - API health status
 
+## Realtime updates (Socket.IO)
+
+Server exposes a Socket.IO endpoint on the same origin as the API. CORS for sockets is controlled via `SOCKET_ORIGINS` (comma-separated).
+
+Connect example (client):
+
+```javascript
+import { io } from 'socket.io-client';
+const socket = io('http://localhost:3000', { auth: { userId: '<currentUserId>' } });
+socket.on('connect', () => console.log('connected'));
+socket.on('payout:created', (payload) => console.log('payout created', payload));
+```
+
+Events:
+- `payout:created` payload:
+```json
+{
+  "id": "<payoutId>",
+  "userId": "<userId>",
+  "amount": 100.5,
+  "currency": "INR",
+  "status": "INITIATED",
+  "url": "http://.../payouts/<token>",
+  "token": "<token>",
+  "expiresAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
 ## Project Structure
 
 ```

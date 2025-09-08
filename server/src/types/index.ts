@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
-export type Role = 'admin' | 'merchant' | 'user' | 'vendor';
-export const ROLE_VALUES: Role[] = ['admin', 'merchant', 'user', 'vendor'];
+export type Role = 'admin' | 'user' | 'vendor';
+export const ROLE_VALUES: Role[] = ['admin', 'user', 'vendor'];
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -59,4 +59,32 @@ export interface ApiResponse<T = any> {
   message: string;
   data?: T;
   error?: string;
+}
+
+export interface CreatePayoutRequest {
+  amount: number;
+  currency?: string; // default INR
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CreatePayoutResponse {
+  payoutId: string;
+  url: string;
+  token: string;
+  expiresAt: string;
+}
+
+export enum PayoutStatus {
+  INITIATED = 'INITIATED'
+}
+
+export interface SubmitPayoutUpiRequest {
+  payoutId: string;
+  upiId: string;
+}
+
+export interface SubmitPayoutUpiResponse {
+  payoutId: string;
+  status: PayoutStatus;
 }

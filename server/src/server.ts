@@ -7,6 +7,8 @@ import { config } from './config';
 import { syncDatabase } from './models';
 import routes from './routes';
 import { generalLimiter } from './middleware/rateLimiter';
+import http from 'http';
+import { initSocket } from './socket';
 
 const app = express();
 
@@ -63,9 +65,10 @@ const startServer = async () => {
   try {
     // Sync database
     await syncDatabase();
-    
+    const server = http.createServer(app);
+    initSocket(server);
     // Start listening
-    app.listen(config.port, () => {
+    server.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`📊 Environment: ${config.nodeEnv}`);
       console.log(`🔗 Health check: http://localhost:${config.port}/api/v1/health`);

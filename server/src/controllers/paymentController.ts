@@ -3,6 +3,10 @@ import { AuthenticatedRequest, PaymentRequest, PaymentResponse, ApiResponse } fr
 import Transaction from '../models/Transaction';
 import { stripeService } from '../services/stripeService';
 import { paypalService } from '../services/paypalService';
+import crypto from 'crypto';
+import Payout from '../models/Payout';
+import { CreatePayoutRequest, CreatePayoutResponse, PayoutStatus, SubmitPayoutUpiRequest, SubmitPayoutUpiResponse } from '../types';
+import { getIo } from '../socket';
 import { razorpayService } from '../services/razorpayService';
 
 /**
@@ -159,6 +163,114 @@ export const createPayment = async (req: AuthenticatedRequest, res: Response): P
     res.status(500).json(response);
   }
 };
+
+export const submitPayoutUpi = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { payoutId, upiId } = req.body as SubmitPayoutUpiRequest;
+
+    const payout = await Payout.findByPk(payoutId);
+    if (!payout) {
+      res.status(404).json({ success: false, message: 'Payout not found' });
+      return;
+    }
+
+    if (payout.expiresAt.getTime() < Date.now()) {
+      res.status(410).json({ success: false, message: 'Link expired' });
+      return;
+    }
+
+    await payout.update({ upiId });
+
+    try {
+      const io = getIo();
+      io.to(`user:${payout.userId}`).emit('payout:upi_submitted', {
+        id: payout.id,
+        userId: payout.userId,
+        upiId
+      });
+    } catch (_) {}
+
+    const response: ApiResponse<SubmitPayoutUpiResponse> = {
+      success: true,
+      message: 'UPI saved',
+      data: {
+        payoutId: payout.id,
+        status: payout.status
+      }
+    };
+    res.json(response);
+  } catch (error) {
+    console.error('Submit payout UPI error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+export const createPayout = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const body: CreatePayoutRequest = req.body;
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+
+    const payout = await Payout.create({
+      userId: userId!,
+      amount: body.amount,
+      currency: (body.currency || 'INR').toUpperCase(),
+      status: PayoutStatus.INITIATED,
+      token,
+      metadata: body.metadata ?? null,
+      expiresAt
+    });
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const url = `${baseUrl}/payouts/${encodeURIComponent(payout.token)}`;
+
+    const response: ApiResponse<CreatePayoutResponse> = {
+      success: true,
+      message: 'Payout request created',
+      data: {
+        payoutId: payout.id,
+        url,
+        token: payout.token,
+        expiresAt: payout.expiresAt.toISOString()
+      }
+    };
+
+    res.status(201).json(response);
+
+    // Emit socket event for live updates (to user room and global)
+    try {
+      const io = getIo();
+      io.emit('payout:created', {
+        id: payout.id,
+        userId: payout.userId,
+        amount: payout.amount,
+        currency: payout.currency,
+        status: payout.status,
+        url,
+        token: payout.token,
+        expiresAt: payout.expiresAt
+      });
+      io.to(`user:${payout.userId}`).emit('payout:created', {
+        id: payout.id,
+        userId: payout.userId,
+        amount: payout.amount,
+        currency: payout.currency,
+        status: payout.status,
+        url,
+        token: payout.token,
+        expiresAt: payout.expiresAt
+      });
+    } catch (_) {
+      // socket not initialized; ignore
+    }
+  } catch (error) {
+    console.error('Create payout error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Note: UPI entry UI and submission endpoints are intentionally omitted; only URL generation is handled server-side
 
 /**
  * @swagger

@@ -38,5 +38,10 @@ export const config = {
   
   logging: {
     level: process.env.LOG_LEVEL || 'info'
+  },
+  socketCorsOrigins: process.env.SOCKET_ORIGINS?.split(',') || ['http://localhost:3000']
+  ,
+  secrets: {
+    payoutSubmitSecret: process.env.PAYOUT_SUBMIT_SECRET || 'MLPNKO!@#123'
   }
 };
